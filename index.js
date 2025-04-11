@@ -122,7 +122,7 @@ async function main() {
     }
   }
 
-  console.log("\n🔥 DONE YA MEK!");
+  console.log("\n🔥 DONE YA MEK! ~CREATED BY AGIL GANTENG ~");
 }
 
 main();
