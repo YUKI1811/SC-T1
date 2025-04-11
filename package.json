@@ -1,0 +1,22 @@
+{
+  "type": "module",
+  "name": "t1-bridge-termux",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "ethers": "^6.13.5",
+    "figlet": "^1.8.0",
+    "gradient-string": "^3.0.0",
+    "inquirer": "^12.5.2",
+    "readline-sync": "^1.4.10",
+    "web3": "^4.16.0"
+  }
+}
