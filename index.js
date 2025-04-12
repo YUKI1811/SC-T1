@@ -1,15 +1,14 @@
-// Versi bolak-balik + fix T1 → Sepolia error
-
-
-
+// Versi bolak-balik Sepolia ⇄ T1 + delay antar loop 55 detik
 import "dotenv/config";
 import { ethers } from "ethers";
 import readline from "readline";
 
+// ===== Konfigurasi .env =====
 const RPC_URL_SEPOLIA = process.env.RPC_URL_SEPOLIA;
 const RPC_URL_T1 = process.env.RPC_URL_T1;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
+// ===== Kontrak & ChainID =====
 const Router_Sepolia = "0xAFdF5cb097D6FB2EB8B1FFbAB180e667458e18F4";
 const Router_T1 = "0x627B3692969b7330b8Faed2A8836A41EB4aC1918";
 
@@ -20,6 +19,9 @@ const BridgeABI = [
   "function sendMessage(address _to, uint256 _value, bytes _message, uint256 _gasLimit, uint64 _destChainId, address _callbackAddress) external payable"
 ];
 
+// ===== Fungsi Utility =====
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
 function getRandomAmount(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(6));
 }
@@ -29,11 +31,13 @@ async function getBalance(provider, address) {
   return Number(ethers.formatEther(balance));
 }
 
+// ===== Sepolia ke T1 =====
 async function bridgeSepoliaToT1() {
   try {
     const provider = new ethers.JsonRpcProvider(RPC_URL_SEPOLIA);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
     const contract = new ethers.Contract(Router_Sepolia, BridgeABI, wallet);
+
     const ethAmount = getRandomAmount(0.0002, 0.0006);
     const amount = ethers.parseEther(ethAmount.toString());
     const fee = ethers.parseEther("0.000000000000168");
@@ -63,13 +67,14 @@ async function bridgeSepoliaToT1() {
   }
 }
 
+// ===== T1 ke Sepolia =====
 async function bridgeT1ToSepolia() {
   try {
     const provider = new ethers.JsonRpcProvider(RPC_URL_T1);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
     const contract = new ethers.Contract(Router_T1, BridgeABI, wallet);
 
-    const ethAmount = getRandomAmount(0.0002, 0.0006);
+    const ethAmount = getRandomAmount(0.0001, 0.001);
     const amount = ethers.parseEther(ethAmount.toString());
     const balance = await provider.getBalance(wallet.address);
     const total = amount;
@@ -84,7 +89,7 @@ async function bridgeT1ToSepolia() {
       wallet.address,
       amount,
       "0x",
-      0, // ⚠️ FIX: gasLimit untuk T1 → Sepolia HARUS 0
+      0, // ⚠️ Untuk T1 ke Sepolia gasLimit HARUS 0
       destChainIdSepolia,
       wallet.address,
       {
@@ -101,24 +106,27 @@ async function bridgeT1ToSepolia() {
   }
 }
 
+// ===== Input CLI =====
 function prompt(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise(resolve => rl.question(question, ans => { rl.close(); resolve(ans); }));
 }
 
+// ===== MAIN =====
 async function main() {
-  console.log("\n=== Bridge Eth sepolia ke T1 dan sebaliknya ===");
+  console.log("\n=== Bridge Sepolia ⇄ T1 ===");
   const jumlah = await prompt("Mau ngulang berapa kali cuy?: ");
   const repeat = parseInt(jumlah);
 
   for (let i = 1; i <= repeat; i++) {
     console.log(`\n🌐 Loop #${i}`);
+
     await bridgeSepoliaToT1();
-    await new Promise(r => setTimeout(r, 10000));
     await bridgeT1ToSepolia();
+
     if (i !== repeat) {
-      console.log("🕐 Tunggu 10 detik sebelum loop selanjutnya...\n");
-      await new Promise(r => setTimeout(r, 10000));
+      console.log("⏳ Delay 55 detik sebelum loop selanjutnya...\n");
+      await delay(55000);
     }
   }
 
